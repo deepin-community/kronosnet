@@ -1,0 +1,259 @@
+From: =?utf-8?q?Ferenc_W=C3=A1gner?= <wferi@debian.org>
+Date: Sun, 29 Aug 2021 20:53:45 +0200
+Subject: nozzle: skip tests if TUN support is not available
+
+---
+ libnozzle/tests/api_nozzle_add_ip.c             |  1 +
+ libnozzle/tests/api_nozzle_close.c              |  1 +
+ libnozzle/tests/api_nozzle_del_ip.c             |  1 +
+ libnozzle/tests/api_nozzle_get_fd.c             |  1 +
+ libnozzle/tests/api_nozzle_get_handle_by_name.c |  1 +
+ libnozzle/tests/api_nozzle_get_ips.c            |  1 +
+ libnozzle/tests/api_nozzle_get_mac.c            |  1 +
+ libnozzle/tests/api_nozzle_get_mtu.c            |  1 +
+ libnozzle/tests/api_nozzle_get_name_by_handle.c |  1 +
+ libnozzle/tests/api_nozzle_open.c               |  1 +
+ libnozzle/tests/api_nozzle_run_updown.c         |  1 +
+ libnozzle/tests/api_nozzle_set_down.c           |  1 +
+ libnozzle/tests/api_nozzle_set_mac.c            |  1 +
+ libnozzle/tests/api_nozzle_set_mtu.c            |  1 +
+ libnozzle/tests/api_nozzle_set_up.c             |  1 +
+ libnozzle/tests/test-common.c                   | 18 ++++++++++++++++--
+ libnozzle/tests/test-common.h                   |  1 +
+ 17 files changed, 32 insertions(+), 2 deletions(-)
+
+diff --git a/libnozzle/tests/api_nozzle_add_ip.c b/libnozzle/tests/api_nozzle_add_ip.c
+index 8491e25..017d8f2 100644
+--- a/libnozzle/tests/api_nozzle_add_ip.c
++++ b/libnozzle/tests/api_nozzle_add_ip.c
+@@ -283,6 +283,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	make_local_ips(testipv4_1, testipv4_2, testipv6_1, testipv6_2);
+ 
+diff --git a/libnozzle/tests/api_nozzle_close.c b/libnozzle/tests/api_nozzle_close.c
+index 27885b0..2d4e1ab 100644
+--- a/libnozzle/tests/api_nozzle_close.c
++++ b/libnozzle/tests/api_nozzle_close.c
+@@ -117,6 +117,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	make_local_ips(testipv4_1, testipv4_2, testipv6_1, testipv6_2);
+ 
+diff --git a/libnozzle/tests/api_nozzle_del_ip.c b/libnozzle/tests/api_nozzle_del_ip.c
+index 9f67a3e..ed1fadf 100644
+--- a/libnozzle/tests/api_nozzle_del_ip.c
++++ b/libnozzle/tests/api_nozzle_del_ip.c
+@@ -256,6 +256,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	make_local_ips(testipv4_1, testipv4_2, testipv6_1, testipv6_2);
+ 
+diff --git a/libnozzle/tests/api_nozzle_get_fd.c b/libnozzle/tests/api_nozzle_get_fd.c
+index 6b12724..1e8f2a1 100644
+--- a/libnozzle/tests/api_nozzle_get_fd.c
++++ b/libnozzle/tests/api_nozzle_get_fd.c
+@@ -69,6 +69,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	if (test() < 0)
+ 		return FAIL;
+diff --git a/libnozzle/tests/api_nozzle_get_handle_by_name.c b/libnozzle/tests/api_nozzle_get_handle_by_name.c
+index 5db1293..49b06dd 100644
+--- a/libnozzle/tests/api_nozzle_get_handle_by_name.c
++++ b/libnozzle/tests/api_nozzle_get_handle_by_name.c
+@@ -77,6 +77,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	if (test() < 0)
+ 		return FAIL;
+diff --git a/libnozzle/tests/api_nozzle_get_ips.c b/libnozzle/tests/api_nozzle_get_ips.c
+index ff96698..d8100da 100644
+--- a/libnozzle/tests/api_nozzle_get_ips.c
++++ b/libnozzle/tests/api_nozzle_get_ips.c
+@@ -172,6 +172,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	make_local_ips(testipv4_1, testipv4_2, testipv6_1, testipv6_2);
+ 
+diff --git a/libnozzle/tests/api_nozzle_get_mac.c b/libnozzle/tests/api_nozzle_get_mac.c
+index 3c99bf5..0e2a46f 100644
+--- a/libnozzle/tests/api_nozzle_get_mac.c
++++ b/libnozzle/tests/api_nozzle_get_mac.c
+@@ -122,6 +122,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	if (test() < 0)
+ 		return FAIL;
+diff --git a/libnozzle/tests/api_nozzle_get_mtu.c b/libnozzle/tests/api_nozzle_get_mtu.c
+index 9f00904..3f8ffd3 100644
+--- a/libnozzle/tests/api_nozzle_get_mtu.c
++++ b/libnozzle/tests/api_nozzle_get_mtu.c
+@@ -90,6 +90,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	if (test() < 0)
+ 		return FAIL;
+diff --git a/libnozzle/tests/api_nozzle_get_name_by_handle.c b/libnozzle/tests/api_nozzle_get_name_by_handle.c
+index 942f997..cbb1739 100644
+--- a/libnozzle/tests/api_nozzle_get_name_by_handle.c
++++ b/libnozzle/tests/api_nozzle_get_name_by_handle.c
+@@ -70,6 +70,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	if (test() < 0)
+ 		return FAIL;
+diff --git a/libnozzle/tests/api_nozzle_open.c b/libnozzle/tests/api_nozzle_open.c
+index dccaf8b..ebf1fcb 100644
+--- a/libnozzle/tests/api_nozzle_open.c
++++ b/libnozzle/tests/api_nozzle_open.c
+@@ -191,6 +191,7 @@ static int test(void)
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	if (test() < 0)
+ 		return FAIL;
+diff --git a/libnozzle/tests/api_nozzle_run_updown.c b/libnozzle/tests/api_nozzle_run_updown.c
+index b752276..b4b5a86 100644
+--- a/libnozzle/tests/api_nozzle_run_updown.c
++++ b/libnozzle/tests/api_nozzle_run_updown.c
+@@ -398,6 +398,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	if (test() < 0)
+ 		return FAIL;
+diff --git a/libnozzle/tests/api_nozzle_set_down.c b/libnozzle/tests/api_nozzle_set_down.c
+index c0eb6db..946b311 100644
+--- a/libnozzle/tests/api_nozzle_set_down.c
++++ b/libnozzle/tests/api_nozzle_set_down.c
+@@ -118,6 +118,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	if (test() < 0)
+ 		return FAIL;
+diff --git a/libnozzle/tests/api_nozzle_set_mac.c b/libnozzle/tests/api_nozzle_set_mac.c
+index 31ebb4c..7c50f94 100644
+--- a/libnozzle/tests/api_nozzle_set_mac.c
++++ b/libnozzle/tests/api_nozzle_set_mac.c
+@@ -150,6 +150,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	if (test() < 0)
+ 		return FAIL;
+diff --git a/libnozzle/tests/api_nozzle_set_mtu.c b/libnozzle/tests/api_nozzle_set_mtu.c
+index b69d1ec..752a55c 100644
+--- a/libnozzle/tests/api_nozzle_set_mtu.c
++++ b/libnozzle/tests/api_nozzle_set_mtu.c
+@@ -284,6 +284,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	make_local_ips(testipv4_1, testipv4_2, testipv6_1, testipv6_2);
+ 
+diff --git a/libnozzle/tests/api_nozzle_set_up.c b/libnozzle/tests/api_nozzle_set_up.c
+index 6d30fcd..6c9e23d 100644
+--- a/libnozzle/tests/api_nozzle_set_up.c
++++ b/libnozzle/tests/api_nozzle_set_up.c
+@@ -92,6 +92,7 @@ out_clean:
+ int main(void)
+ {
+ 	need_root();
++	need_tun();
+ 
+ 	if (test() < 0)
+ 		return FAIL;
+diff --git a/libnozzle/tests/test-common.c b/libnozzle/tests/test-common.c
+index 21663b1..68cbfe5 100644
+--- a/libnozzle/tests/test-common.c
++++ b/libnozzle/tests/test-common.c
+@@ -8,8 +8,10 @@
+ 
+ #include "config.h"
+ 
++#include <errno.h>
++#include <fcntl.h>
+ #include <string.h>
+-#include <sys/types.h>
++#include <sys/stat.h>
+ #include <ifaddrs.h>
+ #include <limits.h>
+ #include <unistd.h>
+@@ -27,13 +29,25 @@ void need_root(void)
+ 	}
+ }
+ 
++void need_tun(void)
++{
++#ifdef KNET_LINUX
++	int fd = open("/dev/net/tun", O_RDWR);
++	if (fd < 0) {
++		printf("Failed to open /dev/net/tun (errno=%d); this test requires TUN support\n", errno);
++		exit(SKIP);
++	}
++	close(fd);
++#endif
++}
++
+ int test_iface(char *name, size_t size, const char *updownpath)
+ {
+ 	nozzle_t nozzle;
+ 
+ 	nozzle=nozzle_open(name, size, updownpath);
+ 	if (!nozzle) {
+-		printf("Unable to open nozzle.\n");
++		printf("Unable to open nozzle (errno=%d).\n", errno);
+ 		return -1;
+ 	}
+ 	printf("Created interface: %s\n", name);
+diff --git a/libnozzle/tests/test-common.h b/libnozzle/tests/test-common.h
+index b96349f..04645b6 100644
+--- a/libnozzle/tests/test-common.h
++++ b/libnozzle/tests/test-common.h
+@@ -28,6 +28,7 @@
+ #define IPBUFSIZE 1024
+ 
+ void need_root(void);
++void need_tun(void);
+ int test_iface(char *name, size_t size, const char *updownpath);
+ int is_if_in_system(char *name);
+ int get_random_byte(void);
