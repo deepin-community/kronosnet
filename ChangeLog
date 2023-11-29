@@ -1,3 +1,338 @@
+2023-09-27  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	Merge pull request #418 from kronosnet/stable1-proposed
+	stable1 proposed
+
+2023-09-26  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	links: fix conversion
+
+	Merge pull request #413 from kronosnet/stable1-proposed
+	stable1 proposed
+
+2023-09-25  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	rx: allow links to be active faster
+	scenario: node A and node B
+
+	node A completes ping/pong link up process faster than B
+	node A starts to send data to node B
+
+	old behavior: node B would unconditionally discard data packets
+
+	new behavior:
+	node B will check internal link status to see if ping/pong link up
+	process is in progress.
+
+	if the link is sending pings and receiving pongs, it´s safe to assume
+	that the link will go up (since we are also receiving data from the
+	node A). node B will speed up link up and accept data immediately.
+
+	This should address a overall init race condition when nodes startup
+	are slighly off by enough milliseconds to cause 2 memeberships to form
+	and see fencing fireworks.
+
+	links: fix ping interval and pong timeout value checking
+	warn if ping interval is lower than thread timer resolution as
+	it has no effects
+
+	error if ping timeout is lower than thread timer resolution as
+	it causes links to be highly unstable
+
+2023-09-18  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	nozzle: don´t leak tun/tap interfaces in test suite
+	the need_tun() test check to verify that the kernel module for tun/tap
+	is loaded, was opening a generic /dev/tun (or /dev/tap) to verify
+	the presence of the kernel module.
+
+	On linux, closing the fd to the tap/tun device is enough to destroy
+	the device.
+
+	On BSD the device is set to DOWN on closing the fd, but it´s not
+	destroyed.
+
+	Stop leaking by gathering ifr ioctl info from the generic interface
+	created by BSD and pass it to the ioctlfd to destroy.
+
+2023-08-14  Jan Friesse  <jfriesse@redhat.com>
+
+	[crypto] Try crypt and decrypt on crypto_init
+	Crypt (or decrypt) operation might fail in some cases even when
+	initialization succeeded. This problem is known to happen when
+	FIPS mode is enabled and combination of openssl/aes192 and md5 is used.
+	This was not caught during crypto_init so knet user (corosync) was
+	not aware of non-working crypto so it couldn't handle it - and couldn't
+	send/receive any packets.
+
+	Solution is to try crypt, decrypt and compare of result buffer right
+	after new crypto_instance is created. If any of these operation fails,
+	whole crypto_init fails, crypto_instance is freed and knet user is
+	notified by receiving non-zero return code.
+
+2023-07-10  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	Merge pull request #404 from kronosnet/stable1-proposed
+	stable1-proposed
+
+	build: disable fortify check for test binaries
+
+	build: autodetect fortify source level automatically
+
+	build: annocheck disable cf-protection
+	currently reporting some MAYBE false positives in fedora
+
+2023-06-07  Jan Friesse  <jfriesse@redhat.com>
+
+	[spec] Migrate to SPDX license
+	Both Fedora and openSUSE now recommends to use SPDX shortname format for
+	License.
+
+2023-05-24  Christine Caulfield  <ccaulfie@redhat.com>
+
+	nozzle: tests: Fix 'set_down' test on FreeBSD-devel
+	The new FreeBSD adds a LOWER_UP flag to interfaces that
+	indicates whether the driver is signalling L1 up. So we
+	need to exclude that from our grep when checking
+	the higher-level interface status.
+
+2023-04-25  Jan Friesse  <jfriesse@redhat.com>
+
+	[tx] Remove expensive memsets
+	Memset of dst_host_ids is relatively expensive because structure is
+	large (128KiB) and it is not really needed because it is always fully
+	set later.
+
+2023-04-03  Christine Caulfield  <ccaulfie@redhat.com>
+
+	log: Add a TRACE log level
+	This also removes the #ifdef DEBUG' conditionals
+	so that those messages can be enabled without a rebuild.
+
+	backport of #403
+
+2023-01-04  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	Merge pull request #381 from kronosnet/stable1-proposed
+	Stable1 proposed
+
+2023-01-02  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	Update copyright
+
+	[man] update to latest doxyxml from libqb
+
+2022-12-14  Christine Caulfield  <ccaulfie@redhat.com>
+
+	udp: Move EPERM to be alongside EMSGSIZE in tx error handler
+	EPERM can be returned (tested Linux 5.19 & FreeBSD 13) when a packet is
+	transmitted that is too large for the i/f MTU or an iptables
+	transmit rule - so it makes sense to treat it like EMSGSIZE
+	and trigger a pMTU run
+
+2022-11-02  Christine Caulfield  <ccaulfie@redhat.com>
+
+	pmtud: Reset/restart pmtud when a node joins
+	If a new node joins with a 'black hole' that sets the effective
+	MTU to be less than the hardware MTU then it will fail to join.
+
+	So this patch restarts the pMTU processes each time a new node
+	joins so it has a chance to declare it's real MTU in time.
+
+2022-10-14  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	Fix update copyright script to better deal with upper/lower cases
+
+2022-08-22  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	Update link to google drive
+
+2022-08-22  Ferenc Wágner  <wferi@debian.org>
+
+	m4/ax_pthread.m4: update to latest upstream version (serial 31)
+	To avoid the warning: $as_echo is obsolete message.
+
+2022-07-27  Jan Friesse  <jfriesse@redhat.com>
+
+	configure: Conditionalize AC_PROG_CC_C99
+	Autoconf 2.70 made AC_PROG_CC_C99 deprecated because
+	AC_PROG_CC is performing same set of tests and sets same
+	variables.
+
+	To remove warning, conditionalize AC_PROG_CC_C99.
+
+2022-07-22  Chrissie Caulfield  <ccaulfie@redhat.com>
+
+	admin: Fix a couple of small things (#384)
+	Spotted by the internal CI
+
+2022-06-09  Mingli Yu  <mingli.yu@windriver.com>
+
+	links.c: Fix build with gcc-12
+	Fix the build failure with gcc-12 when -Og pass to CFLAGS.
+	  | /build/tmp-glibc/work/corei7-64-wrs-linux/kronosnet/1.22-r0/recipe-sysroot/usr/include/bits/string_fortified.h:59:10: error: 'link' may be used uninitialized [-Werror=maybe-uninitialized]
+	  |    59 |   return __builtin___memset_chk (__dest, __ch, __len,
+	  |       |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	  |    60 |                                  __glibc_objsize0 (__dest));
+	  |       |                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+	  | ../../git/libknet/links.c: In function 'knet_link_set_config':
+	  | ../../git/libknet/links.c:108:27: note: 'link' was declared here
+	  |   108 |         struct knet_link *link;
+	  |       |                           ^~~~
+	  | cc1: all warnings being treated as errors
+
+2022-06-02  Ferenc Wágner  <wferi@debian.org>
+
+	Fix comment typo: Minumum -> Minimum
+
+	Fix comment typo: compresion -> compression
+
+2022-05-30  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	Merge pull request #370 from kronosnet/stable1-proposed
+	stable1 proposed
+
+2022-04-29  Chrissie Caulfield  <ccaulfie@redhat.com>
+
+	[doc] To Do list moved to projects.clusterlabs.org (#379)
+
+2022-04-01  Jan Friesse  <jfriesse@redhat.com>
+
+	[logging] Fix Initializing typo
+
+2022-03-23  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	[tx] fix epoll event size to cope with extra event on send to link
+	spotted by -Werror=stringop-overflow= new gcc feature
+
+2022-03-21  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	[tests] deal with new annocheck symlink checks
+	command line has changed between f35 and rawhide, so go for
+	a neutral solution
+
+2022-03-10  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	[tests] update memcheck exceptions
+
+2022-03-10  Christine Caulfield  <ccaulfie@redhat.com>
+
+	tests: move all tests to new infrastructure
+	and update copyright years
+
+2021-12-14  Christine Caulfield  <ccaulfie@redhat.com>
+
+	[UDP] Check for EHOSTUNREACH
+	EHOSTUNREACH seems to have been missed from the list of errors
+	checked at transmit time, so add it. Without this,
+	knet can spin under some conditions. (see issue #373)
+
+2021-11-30  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	[build] fix flag detections for gcc
+	Resolves: https://github.com/kronosnet/kronosnet/issues/371
+
+2021-11-17  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	[doc] update links to mailing lists and drop obsolete test suite
+
+2021-11-15  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	Merge pull request #360 from kronosnet/stable1-proposed
+	Stable1 proposed
+
+2021-11-12  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	[logging] slow down knet a bit when log socket is busy
+
+	[crypto] improve logging when failing to decrypt packets
+
+2021-11-08  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	[udp] use ICMP error messages to trigger faster link down detection
+	this solves a possible race condition when:
+
+	- node1 is running
+	- node2 very fast
+	- node1 does NOT have enough time to detect that node2 has gone
+	  and reset the local seq numbers / buffers
+	- node1 will start rejecting valid packets from node2
+
+	There is still a potential minor race condition where app
+	can restart so fast that kernel / network don't have time
+	to generate an ICMP error. This will be addressed using
+	instance id in onwire v2 protocol, as suggested by Jan F.
+
+	[host] fix dst_seq_num initialization race condition
+	There is a potential race condition where the sender
+	is overloaded, sending data packets before pings
+	can kick in and set the correct dst_seq_num.
+
+	if this node is starting up (dst_seq_num = 0),
+	it can start rejecing valid packets and get stuck.
+
+	Set the dst_seq_num to the first seen packet and
+	use that as reference instead.
+
+2021-10-26  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	[crypto] fix nss crypto buffer boundaries usage
+	this issue was detected by temporary increasing knet header size
+	for debugging purposes, and was generating incorrect crypto data
+	by PK11_CipherOp because the new size was overriding the old data.
+
+	this issue does not affect onwire_v1 or stable1 as it is.
+
+	[build] fix debug build vs annocheck parameters
+	FORTIFY_SOURCE requires -O1 or higher
+
+2021-10-19  Khem Raj  <raj.khem@gmail.com>
+
+	libknet/tests: Correct include path for poll.h
+	Fixes
+	/usr/include/sys/poll.h:1:2: error: redirec
+	ting incorrect #include <sys/poll.h> to <poll.h> [-Werror,-W#warnings]
+	| #warning redirecting incorrect #include <sys/poll.h> to <poll.h>
+
+2021-10-18  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	[tests] temporary disable annobin lto check for centos8 failure
+	adding -flto as suggested, triggers other annobin internal failures on
+	centos8.
+
+2021-09-17  Christine Caulfield  <ccaulfie@redhat.com>
+
+	[build] Add annobin build/check support
+	the annobin check is enabled only if all compiler flags, linker flags
+	and annocheck binary are available.
+
+	the build will use as many of the hardening options required to pass
+	the annocheck regardless.
+
+	the check is performed / enabled only with gcc. clang currently suffers
+	from some limitations to automatically detect the annobin plugin, that
+	would increase drastacally the complexity of the build system
+	unnecessarely.
+
+	implementation based on:
+	- https://bugzilla.redhat.com/show_bug.cgi?id=1961686
+	- https://developers.redhat.com/blog/2019/02/04/annocheck-examining-the-contents-of-binary-files#
+	- https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/developing_c_and_cpp_applications_in_rhel_8/annobin_toolsets
+
+	Original idea by Christine Caulfield <ccaulfie@redhat.com>
+
+	CentOS Stream CI insists on this but it's generally a 'good thing'
+
+2021-09-16  Fabio M. Di Nitto  <fdinitto@redhat.com>
+
+	[nozzle] fix tests on machines that don´t have bash
+
+2021-09-16  Ferenc Wágner  <wferi@debian.org>
+
+	nozzle: preserve test result across cleanup
+
+	nozzle: skip tests if TUN support is not available
+
 2021-08-30  Fabio M. Di Nitto  <fdinitto@redhat.com>
 
 	Merge pull request #344 from kronosnet/stable1-proposed

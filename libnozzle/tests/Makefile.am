@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2017-2021 Red Hat, Inc.  All rights reserved.
+# Copyright (C) 2017-2023 Red Hat, Inc.  All rights reserved.
 #
 # Author: Fabio M. Di Nitto <fabbione@kronosnet.org>
 #
@@ -63,7 +63,7 @@ testsuitedir		= $(TESTDIR)
 testsuite_PROGRAMS	= $(noinst_PROGRAMS)
 endif
 
-check-local: check-api-test-coverage
+check-local: check-api-test-coverage check-annocheck-bins
 
 check-api-test-coverage:
 	chmod u+x $(top_srcdir)/libnozzle/tests/api-test-coverage

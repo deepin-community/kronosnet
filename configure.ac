@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2010-2021 Red Hat, Inc.  All rights reserved.
+# Copyright (C) 2010-2023 Red Hat, Inc.  All rights reserved.
 #
 # Authors: Fabio M. Di Nitto <fabbione@kronosnet.org>
 #          Federico Simoncelli <fsimon@kronosnet.org>
@@ -32,7 +32,6 @@ AX_CHECK_LINK_FLAG([-Wl,--enable-new-dtags],
 		   [AC_MSG_ERROR(["Linker support for --enable-new-dtags is required"])])
 AX_CHECK_LINK_FLAG([-Wl,--as-needed], [AM_LDFLAGS="$AM_LDFLAGS -Wl,--as-needed"])
 
-AC_SUBST([AM_LDFLAGS])
 saved_LDFLAGS="$LDFLAGS"
 LDFLAGS="$AM_LDFLAGS $LDFLAGS"
 LT_INIT
@@ -65,7 +64,7 @@ AC_PROG_GREP
 AC_PROG_SED
 AC_PROG_CPP
 AC_PROG_CC
-AC_PROG_CC_C99
+m4_version_prereq([2.70], [:], [AC_PROG_CC_C99])
 if test "x$ac_cv_prog_cc_c99" = "xno"; then
 	AC_MSG_ERROR(["C99 support is required"])
 fi
@@ -168,6 +167,26 @@ AC_ARG_ENABLE([libnozzle],
 	[ enable_libnozzle="yes" ])
 
 AM_CONDITIONAL([BUILD_LIBNOZZLE], [test x$enable_libnozzle = xyes])
+
+## local helper functions
+# this function checks if CC support options passed as
+# args. Global CPPFLAGS are ignored during this test.
+cc_supports_flag() {
+	saveCPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="-Werror $@"
+	AC_MSG_CHECKING([whether $CC supports "$@"])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <stdio.h>], [
+			   #ifdef __USE_FORTIFY_LEVEL
+			   printf("%d\n", __USE_FORTIFY_LEVEL)
+			   #else
+			   printf("hello world\n")
+			   #endif
+			  ])],
+			  [RC=0; AC_MSG_RESULT([yes])],
+			  [RC=1; AC_MSG_RESULT([no])])
+	CPPFLAGS="$saveCPPFLAGS"
+	return $RC
+}
 
 # Checks for libraries.
 AX_PTHREAD(,[AC_MSG_ERROR([POSIX threads support is required])])
@@ -288,6 +307,10 @@ fi
 AC_ARG_ENABLE([debug],
 	[AS_HELP_STRING([--enable-debug],[enable debug build])])
 
+AC_ARG_ENABLE([hardening],
+	[AS_HELP_STRING([--disable-hardening],[disable hardening build flags])],,
+	[ enable_hardening="yes" ])
+
 AC_ARG_WITH([testdir],
 	[AS_HELP_STRING([--with-testdir=DIR],[path to /usr/lib../kronosnet/tests/ dir where to install the test suite])],
 	[ TESTDIR="$withval" ],
@@ -305,11 +328,71 @@ else
 	OPT_CFLAGS="-O3"
 fi
 
+# Check for availablility of hardening options
+
+annocheck=no
+
+if test "x${enable_hardening}" = xyes; then
+	# support only gcc for now
+	if echo $CC | grep -q gcc; then
+		ANNOPLUGIN="-fplugin=annobin"
+		annocheck=yes
+	fi
+
+	FORTIFY_CFLAGS=""
+	if test "x${enable_debug}" != xyes; then
+		for j in 3 2; do
+			FORTIFY_CFLAGS="-D_FORTIFY_SOURCE=$j"
+			if cc_supports_flag "$OPT_CFLAGS $FORTIFY_CFLAGS"; then
+				break
+			fi
+		done
+	fi
+
+	HARDENING_CFLAGS_ANNOCHECK="$ANNOPLUGIN -fPIC -DPIC -pie -fstack-protector-strong -fexceptions -D_GLIBCXX_ASSERTIONS -Wl,-z,now"
+	HARDENING_CFLAGS="-fstack-clash-protection -fcf-protection=full -mcet -mstackrealign"
+	EXTRA_HARDENING_CFLAGS=""
+
+	# check for annobin required cflags/ldflags
+	for j in $HARDENING_CFLAGS_ANNOCHECK; do
+		if cc_supports_flag $j; then
+			EXTRA_HARDENING_CFLAGS="$EXTRA_HARDENING_CFLAGS $j"
+		else
+			annocheck=no
+		fi
+	done
+
+	# check for other hardening cflags/ldflags
+	for j in $HARDENING_CFLAGS; do
+		if cc_supports_flag $j; then
+			EXTRA_HARDENING_CFLAGS="$EXTRA_HARDENING_CFLAGS $j"
+		fi
+	done
+
+	EXTRA_HARDENING_CFLAGS="$EXTRA_HARDENING_CFLAGS $FORTIFY_CFLAGS"
+
+	# check if annocheck binary is available
+	if test "x${annocheck}" = xyes; then
+		AC_CHECK_PROGS([ANNOCHECK_EXEC], [annocheck])
+		if test "x${ANNOCHECK_EXEC}" = x; then
+			annocheck=no
+		fi
+	fi
+
+	AM_LDFLAGS="$AM_LDFLAGS $EXTRA_HARDENING_CFLAGS"
+fi
+
+if test "x${enable_debug}" = xyes; then
+	annocheck=no
+fi
+
+AM_CONDITIONAL([HAS_ANNOCHECK], [test "x$annocheck" = "xyes"])
+
 # gdb flags
 if test "x${GCC}" = xyes; then
-	GDB_FLAGS="-ggdb3"
+	GDB_CFLAGS="-ggdb3"
 else
-	GDB_FLAGS="-g"
+	GDB_CFLAGS="-g"
 fi
 
 DEFAULT_CFLAGS="-Werror -Wall -Wextra"
@@ -318,7 +401,8 @@ DEFAULT_CFLAGS="-Werror -Wall -Wextra"
 # generates too much noise for stub APIs
 UNWANTED_CFLAGS="-Wno-unused-parameter"
 
-AC_SUBST([AM_CFLAGS],["$OPT_CFLAGS $GDB_FLAGS $DEFAULT_CFLAGS $UNWANTED_CFLAGS"])
+AC_SUBST([AM_CFLAGS],["$OPT_CFLAGS $GDB_CFLAGS $DEFAULT_CFLAGS $EXTRA_HARDENING_CFLAGS $UNWANTED_CFLAGS"])
+AC_SUBST([AM_LDFLAGS])
 
 AX_PROG_DATE
 AS_IF([test "$ax_cv_prog_date_gnu_date:$ax_cv_prog_date_gnu_utc" = yes:yes],

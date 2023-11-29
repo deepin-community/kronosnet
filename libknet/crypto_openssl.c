@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2017-2023 Red Hat, Inc.  All rights reserved.
  *
  * Author: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *
@@ -459,7 +459,7 @@ static int opensslcrypto_authenticate_and_decrypt (
 		memset(tmp_hash, 0, sizeof(tmp_hash));
 
 		if ((temp_buf_len <= 0) || (temp_buf_len > KNET_MAX_PACKET_SIZE)) {
-			log_err(knet_h, KNET_SUB_OPENSSLCRYPTO, "Incorrect packet size.");
+			log_debug(knet_h, KNET_SUB_OPENSSLCRYPTO, "Received incorrect packet size: %zu for hash size: %zu", buf_in_len, crypto_instance->sec_hash_size);
 			return -1;
 		}
 
@@ -469,9 +469,9 @@ static int opensslcrypto_authenticate_and_decrypt (
 
 		if (memcmp(tmp_hash, buf_in + temp_buf_len, crypto_instance->sec_hash_size) != 0) {
 			if (log_level == KNET_LOG_DEBUG) {
-				log_debug(knet_h, KNET_SUB_OPENSSLCRYPTO, "Digest does not match");
+				log_debug(knet_h, KNET_SUB_OPENSSLCRYPTO, "Digest does not match. Check crypto key and configuration.");
 			} else {
-				log_err(knet_h, KNET_SUB_OPENSSLCRYPTO, "Digest does not match");
+				log_err(knet_h, KNET_SUB_OPENSSLCRYPTO, "Digest does not match. Check crypto key and configuration.");
 			}
 			return -1;
 		}
@@ -606,7 +606,7 @@ static int opensslcrypto_init(
 #endif
 
 	log_debug(knet_h, KNET_SUB_OPENSSLCRYPTO,
-		  "Initizializing openssl crypto module [%s/%s]",
+		  "Initializing openssl crypto module [%s/%s]",
 		  knet_handle_crypto_cfg->crypto_cipher_type,
 		  knet_handle_crypto_cfg->crypto_hash_type);
 

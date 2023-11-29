@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2012-2023 Red Hat, Inc.  All rights reserved.
  *
  * Authors: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *          Federico Simoncelli <fsimon@kronosnet.org>
@@ -81,7 +81,7 @@ retry:
 				      &cur[0], msgs_to_send - prev_sent, MSG_DONTWAIT | MSG_NOSIGNAL);
 		savederrno = errno;
 
-		err = transport_tx_sock_error(knet_h, dst_host->link[dst_host->active_links[link_idx]].transport, dst_host->link[dst_host->active_links[link_idx]].outsock, sent_msgs, savederrno);
+		err = transport_tx_sock_error(knet_h, dst_host->link[dst_host->active_links[link_idx]].transport, dst_host->link[dst_host->active_links[link_idx]].outsock, KNET_SUB_TX, sent_msgs, savederrno);
 		switch(err) {
 			case -1: /* unrecoverable error */
 				cur_link->status.stats.tx_data_errors++;
@@ -104,14 +104,12 @@ retry:
 				} else {
 					progress = 0;
 				}
-#ifdef DEBUG
-				log_debug(knet_h, KNET_SUB_TX, "Unable to send all (%d/%d) data packets to host %s (%u) link %s:%s (%u)",
+				log_trace(knet_h, KNET_SUB_TX, "Unable to send all (%d/%d) data packets to host %s (%u) link %s:%s (%u)",
 					  sent_msgs, msg_idx,
 					  dst_host->name, dst_host->host_id,
 					  dst_host->link[dst_host->active_links[link_idx]].status.dst_ipaddr,
 					  dst_host->link[dst_host->active_links[link_idx]].status.dst_port,
 					  dst_host->link[dst_host->active_links[link_idx]].link_id);
-#endif
 				goto retry;
 			}
 			if (!progress) {
@@ -178,9 +176,6 @@ static int _parse_recv_from_sock(knet_handle_t knet_h, size_t inlen, int8_t chan
 		err = -1;
 		goto out_unlock;
 	}
-
-	memset(dst_host_ids_temp, 0, sizeof(dst_host_ids_temp));
-	memset(dst_host_ids, 0, sizeof(dst_host_ids));
 
 	/*
 	 * move this into a separate function to expand on
@@ -647,7 +642,7 @@ static void _handle_send_to_links(knet_handle_t knet_h, struct msghdr *msg, int 
 void *_handle_send_to_links_thread(void *data)
 {
 	knet_handle_t knet_h = (knet_handle_t) data;
-	struct epoll_event events[KNET_EPOLL_MAX_EVENTS];
+	struct epoll_event events[KNET_EPOLL_MAX_EVENTS + 1]; /* see _init_epolls for + 1 */
 	int i, nev, type;
 	int flush, flush_queue_limit;
 	int8_t channel;

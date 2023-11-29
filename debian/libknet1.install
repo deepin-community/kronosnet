@@ -1,2 +1,2 @@
 usr/lib/*/libknet.so.*
-usr/lib/*/kronosnet
+usr/lib/*/kronosnet/*.so

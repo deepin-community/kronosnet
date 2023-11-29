@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2010-2023 Red Hat, Inc.  All rights reserved.
  *
  * Author: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *
@@ -99,19 +99,20 @@ static int is_valid_subsystem(uint8_t subsystem)
 	return -1;
 }
 
-static struct pretty_names loglevel_names[KNET_LOG_DEBUG + 1] =
+static struct pretty_names loglevel_names[KNET_LOG_TRACE + 1] =
 {
 	{ "ERROR", KNET_LOG_ERR },
 	{ "WARNING", KNET_LOG_WARN },
 	{ "info", KNET_LOG_INFO },
-	{ "debug", KNET_LOG_DEBUG }
+	{ "debug", KNET_LOG_DEBUG },
+	{ "trace", KNET_LOG_TRACE }
 };
 
 const char *knet_log_get_loglevel_name(uint8_t level)
 {
 	unsigned int i;
 
-	for (i = 0; i <= KNET_LOG_DEBUG; i++) {
+	for (i = 0; i <= KNET_LOG_TRACE; i++) {
 		if (loglevel_names[i].val == level) {
 			errno = 0;
 			return loglevel_names[i].name;
@@ -124,7 +125,7 @@ uint8_t knet_log_get_loglevel_id(const char *name)
 {
 	unsigned int i;
 
-	for (i = 0; i <= KNET_LOG_DEBUG; i++) {
+	for (i = 0; i <= KNET_LOG_TRACE; i++) {
 		if (strcasecmp(name, loglevel_names[i].name) == 0) {
 			errno = 0;
 			return loglevel_names[i].val;
@@ -147,7 +148,7 @@ int knet_log_set_loglevel(knet_handle_t knet_h, uint8_t subsystem,
 		return -1;
 	}
 
-	if (level > KNET_LOG_DEBUG) {
+	if (level > KNET_LOG_TRACE) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -208,6 +209,7 @@ void log_msg(knet_handle_t knet_h, uint8_t subsystem, uint8_t msglevel,
 	struct knet_log_msg msg;
 	size_t byte_cnt = 0;
 	int len;
+	int retry_loop = 0;
 
 	if ((!knet_h) ||
 	    (subsystem == KNET_MAX_SUBSYSTEMS) ||
@@ -232,9 +234,35 @@ void log_msg(knet_handle_t knet_h, uint8_t subsystem, uint8_t msglevel,
 #endif
 	va_end(ap);
 
+retry:
 	while (byte_cnt < sizeof(struct knet_log_msg)) {
 		len = write(knet_h->logfd, &msg, sizeof(struct knet_log_msg) - byte_cnt);
 		if (len <= 0) {
+			if (errno == EAGAIN) {
+				struct timeval tv;
+
+				/*
+				 * those 3 lines are the equivalent of usleep(1)
+				 * but usleep makes some static code analizers very
+				 * unhappy.
+				 *
+				 * this version is somewhat stolen from gnulib
+				 * nanosleep implementation
+				 */
+				tv.tv_sec = 0;
+				tv.tv_usec = 1;
+				select(0, NULL, NULL, NULL, &tv);
+
+				retry_loop++;
+				/*
+				 * arbitrary amount of retries.
+				 * tested with fun_log_bench, 10 retries was never hit
+				 */
+				if (retry_loop >= 100) {
+					goto out;
+				}
+				goto retry;
+			}
 			goto out;
 		}
 

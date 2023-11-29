@@ -4,10 +4,10 @@ Priority: optional
 Maintainer: Debian HA Maintainers <debian-ha-maintainers@alioth-lists.debian.net>
 Uploaders:
  Ferenc Wágner <wferi@debian.org>,
-Standards-Version: 4.6.0
+Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Build-Depends:
- debhelper-compat (= 12),
+ debhelper-compat (= 13),
 # nozzle tests on Linux use the ip utility from:
  iproute2 [linux-any],
 # ... and on BSD the ifconfig utility from:

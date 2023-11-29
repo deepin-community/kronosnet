@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2018-2023 Red Hat, Inc.  All rights reserved.
  *
  * Author: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *
@@ -191,6 +191,7 @@ static int test(void)
 int main(void)
 {
 	need_root();
+	need_tun();
 
 	if (test() < 0)
 		return FAIL;

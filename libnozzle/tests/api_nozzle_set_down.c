@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2018-2023 Red Hat, Inc.  All rights reserved.
  *
  * Author: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *
@@ -51,7 +51,7 @@ static int test(void)
 		 "ip addr show dev %s | grep -q UP", nozzle->name);
 #endif
 #ifdef KNET_BSD
-		 "ifconfig %s | grep -q UP", nozzle->name);
+	         "ifconfig %s | sed -e 's/LOWER_UP/GROT/' | grep -q UP", nozzle->name);
 #endif
 	err = execute_bin_sh_command(verifycmd, &error_string);
 	if (error_string) {
@@ -80,7 +80,7 @@ static int test(void)
 		 "ip addr show dev %s | grep -q UP", nozzle->name);
 #endif
 #ifdef KNET_BSD
-		 "ifconfig %s | grep -q UP", nozzle->name);
+	         "ifconfig %s | sed -e 's/LOWER_UP/GROT/' | grep -q UP", nozzle->name);
 #endif
 	err = execute_bin_sh_command(verifycmd, &error_string);
 	if (error_string) {
@@ -118,6 +118,7 @@ out_clean:
 int main(void)
 {
 	need_root();
+	need_tun();
 
 	if (test() < 0)
 		return FAIL;

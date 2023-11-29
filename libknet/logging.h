@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2012-2023 Red Hat, Inc.  All rights reserved.
  *
  * Authors: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *          Federico Simoncelli <fsimon@kronosnet.org>
@@ -34,5 +34,8 @@ log_msg_t LOG_MSG;
 
 #define log_debug(knet_h, subsys, fmt, args...) \
 	LOG_MSG(knet_h, subsys, KNET_LOG_DEBUG, fmt, ##args)
+
+#define log_trace(knet_h, subsys, fmt, args...) \
+	LOG_MSG(knet_h, subsys, KNET_LOG_TRACE, fmt, ##args)
 
 #endif

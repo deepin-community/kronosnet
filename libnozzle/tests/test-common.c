@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2018-2023 Red Hat, Inc.  All rights reserved.
  *
  * Author: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *
@@ -8,14 +8,20 @@
 
 #include "config.h"
 
+#include <errno.h>
+#include <fcntl.h>
 #include <string.h>
-#include <sys/types.h>
+#include <sys/stat.h>
 #include <ifaddrs.h>
 #include <limits.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef KNET_BSD
+#include <sys/ioctl.h>
+#include <net/if_tap.h>
+#endif
 
 #include "test-common.h"
 
@@ -27,13 +33,49 @@ void need_root(void)
 	}
 }
 
+void need_tun(void)
+{
+	int fd;
+#ifdef KNET_LINUX
+	const char *tundev = "/dev/net/tun";
+#endif
+#ifdef KNET_BSD
+	const char *tundev = "/dev/tap";
+	struct ifreq ifr;
+	int ioctlfd = socket(AF_LOCAL, SOCK_DGRAM, 0);
+
+	if (ioctlfd < 0) {
+		printf("Unable to init ioctlfd (errno=%d)\n", errno);
+		exit(FAIL);
+	}
+#endif
+
+	fd = open(tundev, O_RDWR);
+	if (fd < 0) {
+		printf("Failed to open %s (errno=%d); this test requires TUN support\n", tundev, errno);
+#ifdef KNET_BSD
+		close(ioctlfd);
+#endif
+		exit(SKIP);
+	}
+#ifdef KNET_BSD
+	memset(&ifr, 0, sizeof(struct ifreq));
+	ioctl(fd, TAPGIFNAME, &ifr);
+#endif
+	close(fd);
+#ifdef KNET_BSD
+	ioctl(ioctlfd, SIOCIFDESTROY, &ifr);
+	close(ioctlfd);
+#endif
+}
+
 int test_iface(char *name, size_t size, const char *updownpath)
 {
 	nozzle_t nozzle;
 
 	nozzle=nozzle_open(name, size, updownpath);
 	if (!nozzle) {
-		printf("Unable to open nozzle.\n");
+		printf("Unable to open nozzle (errno=%d).\n", errno);
 		return -1;
 	}
 	printf("Created interface: %s\n", name);
