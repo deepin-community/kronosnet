@@ -1,2 +1,0 @@
-nozzle-skip-tests-if-TUN-support-is-not-available.patch
-nozzle-preserve-test-result-across-cleanup.patch

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2016-2023 Red Hat, Inc.  All rights reserved.
  *
  * Authors: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *
@@ -30,8 +30,15 @@ static void test(void)
 		exit(FAIL);
 	}
 
+	res = knet_log_get_loglevel_name(KNET_LOG_TRACE);
+	if (strcmp(res, "trace")) {
+		printf("knet_log_get_loglevel_name failed to get correct log level name. got: %s expected: debug\n",
+		       res);
+		exit(FAIL);
+	}
+
 	printf("Testing knet_log_get_loglevel_name bad lookup\n");
-	res = knet_log_get_loglevel_name(KNET_LOG_DEBUG+1);
+	res = knet_log_get_loglevel_name(KNET_LOG_TRACE+1);
 	if (strcmp(res, "ERROR")) {
 		printf("knet_log_get_loglevel_name failed to get correct log level name. got: %s expected: ERROR\n",
 		       res);

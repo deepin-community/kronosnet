@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2010-2021 Red Hat, Inc.  All rights reserved.
+# Copyright (C) 2010-2023 Red Hat, Inc.  All rights reserved.
 #
 # Author: Fabio M. Di Nitto <fabbione@kronosnet.org>
 #
@@ -45,5 +45,7 @@ libnozzle_la_LDFLAGS	= $(AM_LDFLAGS) \
 			  -version-info $(libversion)
 
 libnozzle_la_LIBADD	= $(PTHREAD_LIBS) $(libnl_LIBS) $(libnlroute_LIBS)
+
+check-local: check-annocheck-libs
 
 endif

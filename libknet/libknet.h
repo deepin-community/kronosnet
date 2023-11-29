@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2010-2023 Red Hat, Inc.  All rights reserved.
  *
  * Authors: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *          Federico Simoncelli <fsimon@kronosnet.org>
@@ -19,7 +19,7 @@
 /**
  * @file libknet.h
  * @brief kronosnet API include file
- * @copyright Copyright (C) 2010-2021 Red Hat, Inc.  All rights reserved.
+ * @copyright Copyright (C) 2010-2023 Red Hat, Inc.  All rights reserved.
  *
  * Kronosnet is an advanced VPN system for High Availability applications.
  */
@@ -463,6 +463,8 @@ int knet_send_sync(knet_handle_t knet_h,
  *                                           packet
  *            knet_node_id_t *dst_host_ids - array of KNET_MAX_HOST knet_node_id_t
  *                                           where to store the destinations
+ *                                           (uninitialized by caller, callee should never
+ *                                           read it)
  *            size_t *dst_host_ids_entries - number of hosts to send the message
  *
  * dst_host_filter_fn should return
@@ -943,11 +945,11 @@ struct knet_handle_stats {
 	uint64_t tx_compressed_packets;
 	/** Number of bytes sent (as if uncompressed, ie actual data bytes) */
 	uint64_t tx_compressed_original_bytes;
-	/** Number of bytes sent on the wire after compresion */
+	/** Number of bytes sent on the wire after compression */
 	uint64_t tx_compressed_size_bytes;
 	/** Average(mean) time take to compress transmitted packets */
 	uint64_t tx_compress_time_ave;
-	/** Minumum time taken to compress transmitted packets */
+	/** Minimum time taken to compress transmitted packets */
 	uint64_t tx_compress_time_min;
 	/** Maximum time taken to compress transmitted packets */
 	uint64_t tx_compress_time_max;
@@ -2351,13 +2353,14 @@ const char *knet_log_get_subsystem_name(uint8_t subsystem);
 uint8_t knet_log_get_subsystem_id(const char *name);
 
 /*
- * 4 log levels are enough for everybody
+ * 5 log levels are enough for everybody
  */
 
 #define KNET_LOG_ERR         0 /* unrecoverable errors/conditions */
 #define KNET_LOG_WARN        1 /* recoverable errors/conditions */
 #define KNET_LOG_INFO        2 /* info, link up/down, config changes.. */
 #define KNET_LOG_DEBUG       3
+#define KNET_LOG_TRACE       4
 
 /*
  * Convert between log level values and names

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2012-2021 Red Hat, Inc.  All rights reserved.
+# Copyright (C) 2012-2023 Red Hat, Inc.  All rights reserved.
 #
 # Author: Fabio M. Di Nitto <fabbione@kronosnet.org>
 #
@@ -48,4 +48,37 @@ else
 endif
 else
 	@echo cov-build not available on this platform
+endif
+
+check-annocheck-libs:
+if HAS_ANNOCHECK
+	@echo Running annocheck libs test
+	TESTLIBS="$(shell find .libs/ -type f -name "*.so.*")"; \
+	if ! $(ANNOCHECK_EXEC) --skip-lto --skip-cf-protection --quiet $$TESTLIBS; then \
+		$(ANNOCHECK_EXEC) --skip-lto --skip-cf-protection --verbose $$TESTLIBS; \
+		echo annocheck libs test: FAILED; \
+		exit 1; \
+	else \
+		echo annocheck libs test: PASS; \
+	fi
+else
+	@echo Annocheck build or binary not available
+endif
+
+# we cannot check run-path because CI builds with specific prefix/user_prefix
+# and the only binaries affected are the test suite.
+
+check-annocheck-bins:
+if HAS_ANNOCHECK
+	@echo Running annocheck binaries test
+	TESTBINS="$(shell find .libs/ -type f)"; \
+	if ! $(ANNOCHECK_EXEC) --skip-run-path --skip-lto --skip-cf-protection --skip-fortify --quiet $$TESTBINS; then \
+		$(ANNOCHECK_EXEC) --skip-run-path --skip-lto --skip-cf-protection --skip-fortify --verbose $$TESTBINS; \
+		echo annocheck binaries test: FAILED; \
+		exit 1; \
+	else \
+		echo annocheck binaries test: PASS; \
+	fi
+else
+	@echo Annocheck build or binary not available
 endif

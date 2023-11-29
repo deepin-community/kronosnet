@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016-2021 Red Hat, Inc.  All rights reserved.
+# Copyright (C) 2016-2023 Red Hat, Inc.  All rights reserved.
 #
 # Authors: Fabio M. Di Nitto <fabbione@kronosnet.org>
 #
@@ -71,7 +71,7 @@ testsuitedir		= $(TESTDIR)
 testsuite_PROGRAMS	= $(noinst_PROGRAMS)
 endif
 
-check-local: check-api-test-coverage
+check-local: check-api-test-coverage check-annocheck-bins
 
 check-api-test-coverage:
 	chmod u+x $(top_srcdir)/libknet/tests/api-test-coverage

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2018-2023 Red Hat, Inc.  All rights reserved.
  *
  * Author: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *
@@ -380,8 +380,7 @@ out_clean:
 	if (tmpdir) {
 		snprintf(tmpstr, sizeof(tmpstr) - 1, "rm -rf %s", tmpdir);
 		printf("Removing temporary dir: %s\n", tmpstr);
-		err = execute_bin_sh_command(tmpstr, &error_string);
-		if (err) {
+		if (execute_bin_sh_command(tmpstr, &error_string)) {
 			printf("Error removing directory: %s\n", error_string);
 		}
 		if (error_string) {
@@ -398,6 +397,7 @@ out_clean:
 int main(void)
 {
 	need_root();
+	need_tun();
 
 	if (test() < 0)
 		return FAIL;

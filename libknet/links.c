@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2012-2023 Red Hat, Inc.  All rights reserved.
  *
  * Authors: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *          Federico Simoncelli <fsimon@kronosnet.org>
@@ -46,6 +46,10 @@ int _link_updown(knet_handle_t knet_h, knet_node_id_t host_id, uint8_t link_id,
 
 	if (!connected) {
 		transport_link_is_down(knet_h, link);
+	} else {
+		/* Reset MTU in case new link can't use full line MTU */
+		log_info(knet_h, KNET_SUB_LINK, "Resetting MTU for link %u because host %u joined", link_id, host_id);
+		force_pmtud_run(knet_h, KNET_SUB_LINK, 1, 1);
 	}
 
 	if (lock_stats) {
@@ -105,7 +109,7 @@ int knet_link_set_config(knet_handle_t knet_h, knet_node_id_t host_id, uint8_t l
 {
 	int savederrno = 0, err = 0, i, wipelink = 0, link_idx;
 	struct knet_host *host, *tmp_host;
-	struct knet_link *link;
+	struct knet_link *link = NULL;
 
 	if (!_is_valid_handle(knet_h)) {
 		return -1;
@@ -887,6 +891,21 @@ int knet_link_set_ping_timers(knet_handle_t knet_h, knet_node_id_t host_id, uint
 		savederrno = EINVAL;
 		log_err(knet_h, KNET_SUB_LINK, "host %u link %u is not configured: %s",
 			host_id, link_id, strerror(savederrno));
+		goto exit_unlock;
+	}
+
+	if ((interval * 1000) < KNET_THREADS_TIMERES) {
+		log_warn(knet_h, KNET_SUB_LINK,
+			 "host: %u link: %u interval: %lu too small (%s). interval lower than thread_timer_res (%u ms) has no effect",
+			 host_id, link_id, interval, strerror(savederrno), (KNET_THREADS_TIMERES / 1000));
+	}
+
+	if ((timeout * 1000) < KNET_THREADS_TIMERES) {
+		err = -1;
+		savederrno = EINVAL;
+		log_err(knet_h, KNET_SUB_LINK,
+			"host: %u link: %u pong timeout: %lu too small (%s). timeout cannot be less than thread_timer_res (%u ms)",
+			host_id, link_id, timeout, strerror(savederrno), (KNET_THREADS_TIMERES / 1000));
 		goto exit_unlock;
 	}
 

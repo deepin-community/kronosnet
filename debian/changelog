@@ -1,3 +1,52 @@
+kronosnet (1.28-1) unstable; urgency=medium
+
+  * [b4ef57b] New upstream release (1.28)
+
+ -- Ferenc Wágner <wferi@debian.org>  Fri, 29 Sep 2023 18:59:46 +0200
+
+kronosnet (1.26-1) unstable; urgency=medium
+
+  * [a7cccd8] New upstream release (1.26)
+  * [7379051] Do not conflict the upstream fortify setting
+
+ -- Ferenc Wágner <wferi@debian.org>  Tue, 01 Aug 2023 22:52:49 +0200
+
+kronosnet (1.25-1) unstable; urgency=medium
+
+  * [d187fbc] New upstream release (1.25)
+  * [d48c205] Update Standards-Version to 4.6.2 (no changes required)
+  * [df36865] Drop unused Lintian overrides.
+    Now even the LZ4 adaptor plugins are linked against libc, probably due
+    to some toolchain change.
+  * [0cb28c2] Update debian/* copyright year
+
+ -- Ferenc Wágner <wferi@debian.org>  Wed, 04 Jan 2023 14:15:31 +0100
+
+kronosnet (1.24-1) unstable; urgency=medium
+
+  * [971382a] New upstream release (1.24)
+  * [4430f55] Delete released upstream patch
+  * [2a73d9a] Update Standards-Version to 4.6.1 (no changes required)
+  * [99fa13d] Switch to Debhelper compatibility level 13
+  * [fa5b119] Replace override_dh_install with debian/not-installed
+
+ -- Ferenc Wágner <wferi@debian.org>  Wed, 01 Jun 2022 22:11:01 +0200
+
+kronosnet (1.23-2) unstable; urgency=medium
+
+  * [1d79c07] New patch: [build] fix flag detections for gcc.
+    Thanks to Fabio M. Di Nitto (Closes: #1000853)
+  * [ccb294a] Work around our Debian patch in the autopkgtests
+
+ -- Ferenc Wágner <wferi@debian.org>  Tue, 30 Nov 2021 15:26:12 +0100
+
+kronosnet (1.23-1) unstable; urgency=medium
+
+  * [12a955b] New upstream release (1.23)
+  * [e55e177] Delete upstreamed patches (all of them)
+
+ -- Ferenc Wágner <wferi@debian.org>  Sun, 21 Nov 2021 14:56:24 +0100
+
 kronosnet (1.22-1) unstable; urgency=medium
 
   * [50b3d13] New upstream release (1.22)

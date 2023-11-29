@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Red Hat, Inc.  All rights reserved.
+ * Copyright (C) 2018-2023 Red Hat, Inc.  All rights reserved.
  *
  * Author: Fabio M. Di Nitto <fabbione@kronosnet.org>
  *
@@ -172,6 +172,7 @@ out_clean:
 int main(void)
 {
 	need_root();
+	need_tun();
 
 	make_local_ips(testipv4_1, testipv4_2, testipv6_1, testipv6_2);
 
